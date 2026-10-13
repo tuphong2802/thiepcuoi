@@ -1,2 +1,2 @@
 # thiepcuoi
-Thiệp cưới online Mạnh Quyết $ Phạm Hân
+Thiệp cưới online Mạnh Quyết - Phạm Hân
