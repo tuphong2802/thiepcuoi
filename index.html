@@ -949,6 +949,50 @@ if (WEDDING.googleAppsScriptUrl) {
   updateButton(!music.paused);
 })();
 
+(() => {
+  // Dung tu dong cuon khi nguoi dung tuong tac
+  function stopWeddingAutoScroll() {
+    // Danh dau de ham tu cuon hien tai biet phai dung
+    window.weddingAutoScrollStopped = true;
+
+    // Huy cac animation frame neu duoc luu trong bien nay
+    if (window.weddingAutoScrollFrame) {
+      cancelAnimationFrame(window.weddingAutoScrollFrame);
+      window.weddingAutoScrollFrame = null;
+    }
+  }
+
+  // 1. Bam chuot trai tren may tinh
+  document.addEventListener('mousedown', event => {
+    if (event.button === 0) {
+      stopWeddingAutoScroll();
+    }
+  }, true);
+
+  // 2. Cham man hinh tren dien thoai
+  document.addEventListener('touchstart', () => {
+    stopWeddingAutoScroll();
+  }, { capture: true, passive: true });
+
+  // 3. Focus vao form nhap lieu
+  document.addEventListener('focusin', event => {
+    const el = event.target;
+
+    if (el.matches('input, textarea, select, [contenteditable="true"]')) {
+      stopWeddingAutoScroll();
+    }
+  }, true);
+
+  // 4. Nhan phim de tuong tac voi form
+  document.addEventListener('keydown', event => {
+    const el = event.target;
+
+    if (el.matches('input, textarea, select, [contenteditable="true"]')) {
+      stopWeddingAutoScroll();
+    }
+  }, true);
+})();
+
   </script>
 </body>
 </html>
