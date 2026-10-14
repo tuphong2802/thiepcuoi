@@ -740,6 +740,106 @@ if (WEDDING.googleAppsScriptUrl) {
     });
   });
 }
+    
+    // Tu dong cuon sau khi bam "Mo thiep"
+    (() => {
+      const openButton = document.querySelector(
+        '.cover-content a.btn[href="#invitation"]'
+      );
+
+      if (!openButton) return;
+
+      let autoScrolling = false;
+      let animationFrame = null;
+      let lastTime = 0;
+      let resumeTimer = null;
+      let manualScrolling = false;
+
+      const NORMAL_SPEED = 65; // pixel/giay
+
+      function stopAnimation() {
+        if (animationFrame !== null) {
+          cancelAnimationFrame(animationFrame);
+          animationFrame = null;
+        }
+        lastTime = 0;
+      }
+
+      function autoScrollFrame(timestamp) {
+        if (!autoScrolling || manualScrolling) {
+          stopAnimation();
+          return;
+        }
+
+        if (!lastTime) lastTime = timestamp;
+
+        const elapsed = Math.min((timestamp - lastTime) / 1000, 0.05);
+        lastTime = timestamp;
+
+        const maxScroll =
+          document.documentElement.scrollHeight - window.innerHeight;
+
+        if (window.scrollY >= maxScroll - 2) {
+          autoScrolling = false;
+          stopAnimation();
+          return;
+        }
+
+        window.scrollBy(0, NORMAL_SPEED * elapsed);
+        animationFrame = requestAnimationFrame(autoScrollFrame);
+      }
+
+      function startAnimation() {
+        if (!autoScrolling || manualScrolling || animationFrame !== null) {
+          return;
+        }
+
+        lastTime = 0;
+        animationFrame = requestAnimationFrame(autoScrollFrame);
+      }
+
+      function pauseForManualScroll() {
+        if (!autoScrolling) return;
+
+        manualScrolling = true;
+        stopAnimation();
+
+        clearTimeout(resumeTimer);
+        resumeTimer = setTimeout(() => {
+          manualScrolling = false;
+          startAnimation();
+        }, 1000);
+      }
+
+      // Bam "Mo thiep" thi bat dau tu dong cuon
+      openButton.addEventListener('click', () => {
+        autoScrolling = true;
+        manualScrolling = false;
+        clearTimeout(resumeTimer);
+        stopAnimation();
+        startAnimation();
+      });
+
+      // Khi khach tu cuon, uu tien thao tac cua khach
+      window.addEventListener('wheel', pauseForManualScroll, {
+        passive: true
+      });
+
+      window.addEventListener('touchstart', pauseForManualScroll, {
+        passive: true
+      });
+
+      window.addEventListener('touchmove', pauseForManualScroll, {
+        passive: true
+      });
+
+      // Khi khach keo thanh cuon bang chuot
+      window.addEventListener('mousedown', event => {
+        if (event.clientX >= window.innerWidth - 22) {
+          pauseForManualScroll();
+        }
+      });
+    })();
   </script>
 </body>
 </html>
