@@ -530,7 +530,7 @@
             </div>
             <div class="field"><label for="message">Lời chúc gửi đến cô dâu chú rể</label><textarea id="message" name="message" placeholder="Viết lời chúc của bạn tại đây..."></textarea></div>
             <button class="btn" type="submit">Gửi xác nhận <span aria-hidden="true">↗</span></button>
-            <p class="form-status" id="formStatus" role="status">Mẫu xác nhận sẽ được kết nối với kênh liên hệ khi bổ sung thông tin trong phần cấu hình.</p>
+            <p class="form-status" id="formStatus" role="status">Mẫu xác nhận sẽ được gửi đến cho chú rể.</p>
           </form>
         </div>
       </div>
@@ -825,6 +825,9 @@ if (WEDDING.googleAppsScriptUrl) {
     stopFrame();
     clearTimeout(resumeTimer);
     root.style.scrollBehavior = originalScrollBehavior;
+    if (window.weddingAutoScrollStopped) {
+    return;
+  }
   }
 
   function tick(time) {
