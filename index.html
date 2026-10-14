@@ -741,105 +741,115 @@ if (WEDDING.googleAppsScriptUrl) {
   });
 }
     
-    // Tu dong cuon sau khi bam "Mo thiep"
-    (() => {
-      const openButton = document.querySelector(
-        '.cover-content a.btn[href="#invitation"]'
-      );
+   
+(() => {
+  let started = false;
+  let rafId = null;
+  let lastTime = 0;
+  let resumeTimer = null;
+  let userInteracting = false;
 
-      if (!openButton) return;
+  const NORMAL_SPEED = 65;
+  const RESUME_DELAY = 1000;
 
-      let autoScrolling = false;
-      let animationFrame = null;
-      let lastTime = 0;
-      let resumeTimer = null;
-      let manualScrolling = false;
+  function stopFrame() {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    lastTime = 0;
+  }
 
-      const NORMAL_SPEED = 65; // pixel/giay
+  function tick(time) {
+    rafId = null;
 
-      function stopAnimation() {
-        if (animationFrame !== null) {
-          cancelAnimationFrame(animationFrame);
-          animationFrame = null;
-        }
-        lastTime = 0;
-      }
+    if (!started || userInteracting) return;
 
-      function autoScrollFrame(timestamp) {
-        if (!autoScrolling || manualScrolling) {
-          stopAnimation();
-          return;
-        }
+    if (!lastTime) lastTime = time;
+    const delta = Math.min((time - lastTime) / 1000, 0.05);
+    lastTime = time;
 
-        if (!lastTime) lastTime = timestamp;
+    const root = document.documentElement;
+    const maxScroll = Math.max(
+      0,
+      root.scrollHeight - window.innerHeight
+    );
 
-        const elapsed = Math.min((timestamp - lastTime) / 1000, 0.05);
-        lastTime = timestamp;
+    if (window.scrollY >= maxScroll - 2) {
+      started = false;
+      stopFrame();
+      return;
+    }
 
-        const maxScroll =
-          document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollBy(0, NORMAL_SPEED * delta);
+    rafId = requestAnimationFrame(tick);
+  }
 
-        if (window.scrollY >= maxScroll - 2) {
-          autoScrolling = false;
-          stopAnimation();
-          return;
-        }
+  function startFrame() {
+    if (!started || userInteracting || rafId !== null) return;
+    lastTime = 0;
+    rafId = requestAnimationFrame(tick);
+  }
 
-        window.scrollBy(0, NORMAL_SPEED * elapsed);
-        animationFrame = requestAnimationFrame(autoScrollFrame);
-      }
+  function onUserScroll() {
+    if (!started) return;
 
-      function startAnimation() {
-        if (!autoScrolling || manualScrolling || animationFrame !== null) {
-          return;
-        }
+    userInteracting = true;
+    stopFrame();
+    clearTimeout(resumeTimer);
 
-        lastTime = 0;
-        animationFrame = requestAnimationFrame(autoScrollFrame);
-      }
+    resumeTimer = setTimeout(() => {
+      userInteracting = false;
+      startFrame();
+    }, RESUME_DELAY);
+  }
 
-      function pauseForManualScroll() {
-        if (!autoScrolling) return;
+  // Nhận diện nút "Mở thiệp" trên cả máy tính và điện thoại
+  document.addEventListener('click', event => {
+    const element = event.target.closest('a, button');
+    if (!element) return;
 
-        manualScrolling = true;
-        stopAnimation();
+    const text = (element.innerText || element.textContent || '')
+      .trim()
+      .toLowerCase();
 
-        clearTimeout(resumeTimer);
-        resumeTimer = setTimeout(() => {
-          manualScrolling = false;
-          startAnimation();
-        }, 1000);
-      }
+    if (!text.includes('mở thiệp')) return;
 
-      // Bam "Mo thiep" thi bat dau tu dong cuon
-      openButton.addEventListener('click', () => {
-        autoScrolling = true;
-        manualScrolling = false;
-        clearTimeout(resumeTimer);
-        stopAnimation();
-        startAnimation();
-      });
+    started = true;
+    userInteracting = false;
+    clearTimeout(resumeTimer);
+    stopFrame();
 
-      // Khi khach tu cuon, uu tien thao tac cua khach
-      window.addEventListener('wheel', pauseForManualScroll, {
-        passive: true
-      });
+    // Chờ thao tác mở thiệp hoàn tất rồi bắt đầu cuộn
+    requestAnimationFrame(() => {
+      startFrame();
+    });
+  });
 
-      window.addEventListener('touchstart', pauseForManualScroll, {
-        passive: true
-      });
+  // Chỉ tạm dừng khi người dùng thực sự di chuyển trang
+  window.addEventListener('wheel', onUserScroll, { passive: true });
 
-      window.addEventListener('touchmove', pauseForManualScroll, {
-        passive: true
-      });
+  let touchStartY = 0;
 
-      // Khi khach keo thanh cuon bang chuot
-      window.addEventListener('mousedown', event => {
-        if (event.clientX >= window.innerWidth - 22) {
-          pauseForManualScroll();
-        }
-      });
-    })();
+  window.addEventListener('touchstart', event => {
+    touchStartY = event.touches[0].clientY;
+  }, { passive: true });
+
+  window.addEventListener('touchmove', event => {
+    const currentY = event.touches[0].clientY;
+    if (Math.abs(currentY - touchStartY) > 5) {
+      onUserScroll();
+    }
+  }, { passive: true });
+
+  window.addEventListener('scroll', () => {
+    // Không dừng khi chính đoạn mã tự cuộn đang chạy
+    if (started && rafId === null && !userInteracting) {
+      startFrame();
+    }
+  }, { passive: true });
+})();
+
   </script>
 </body>
 </html>
