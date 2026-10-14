@@ -742,15 +742,28 @@ if (WEDDING.googleAppsScriptUrl) {
 }
     
    
+
 (() => {
+  const openButton = document.querySelector(
+    '.cover-content a.btn[href="#invitation"]'
+  );
+
+  if (!openButton) {
+    console.warn('Không tìm thấy nút Mở thiệp.');
+    return;
+  }
+
   let started = false;
   let rafId = null;
   let lastTime = 0;
   let resumeTimer = null;
+  let touchStartY = 0;
   let userInteracting = false;
 
   const NORMAL_SPEED = 65;
   const RESUME_DELAY = 1000;
+  const root = document.documentElement;
+  const originalScrollBehavior = root.style.scrollBehavior;
 
   function stopFrame() {
     if (rafId !== null) {
@@ -758,6 +771,13 @@ if (WEDDING.googleAppsScriptUrl) {
       rafId = null;
     }
     lastTime = 0;
+  }
+
+  function finishAutoScroll() {
+    started = false;
+    stopFrame();
+    clearTimeout(resumeTimer);
+    root.style.scrollBehavior = originalScrollBehavior;
   }
 
   function tick(time) {
@@ -769,18 +789,15 @@ if (WEDDING.googleAppsScriptUrl) {
     const delta = Math.min((time - lastTime) / 1000, 0.05);
     lastTime = time;
 
-    const root = document.documentElement;
-    const maxScroll = Math.max(
-      0,
-      root.scrollHeight - window.innerHeight
-    );
+    const maxScroll =
+      root.scrollHeight - window.innerHeight;
 
     if (window.scrollY >= maxScroll - 2) {
-      started = false;
-      stopFrame();
+      finishAutoScroll();
       return;
     }
 
+    // Cuộn tức thời từng bước, tránh xung đột smooth scroll
     window.scrollBy(0, NORMAL_SPEED * delta);
     rafId = requestAnimationFrame(tick);
   }
@@ -791,7 +808,7 @@ if (WEDDING.googleAppsScriptUrl) {
     rafId = requestAnimationFrame(tick);
   }
 
-  function onUserScroll() {
+  function pauseThenResume() {
     if (!started) return;
 
     userInteracting = true;
@@ -804,51 +821,47 @@ if (WEDDING.googleAppsScriptUrl) {
     }, RESUME_DELAY);
   }
 
-  // Nhận diện nút "Mở thiệp" trên cả máy tính và điện thoại
-  document.addEventListener('click', event => {
-    const element = event.target.closest('a, button');
-    if (!element) return;
-
-    const text = (element.innerText || element.textContent || '')
-      .trim()
-      .toLowerCase();
-
-    if (!text.includes('mở thiệp')) return;
+  // Bắt chính xác nút Mở thiệp trong HTML hiện tại
+  openButton.addEventListener('click', event => {
+    event.preventDefault();
 
     started = true;
     userInteracting = false;
     clearTimeout(resumeTimer);
     stopFrame();
 
-    // Chờ thao tác mở thiệp hoàn tất rồi bắt đầu cuộn
-    requestAnimationFrame(() => {
-      startFrame();
-    });
+    // Tắt smooth scroll của CSS trong lúc tự cuộn
+    root.style.scrollBehavior = 'auto';
+
+    startFrame();
   });
 
-  // Chỉ tạm dừng khi người dùng thực sự di chuyển trang
-  window.addEventListener('wheel', onUserScroll, { passive: true });
+  // Máy tính: ưu tiên thao tác lăn chuột
+  window.addEventListener('wheel', pauseThenResume, {
+    passive: true
+  });
 
-  let touchStartY = 0;
-
+  // Điện thoại: chỉ tạm dừng khi ngón tay thực sự vuốt
   window.addEventListener('touchstart', event => {
     touchStartY = event.touches[0].clientY;
   }, { passive: true });
 
   window.addEventListener('touchmove', event => {
     const currentY = event.touches[0].clientY;
+
     if (Math.abs(currentY - touchStartY) > 5) {
-      onUserScroll();
+      pauseThenResume();
     }
   }, { passive: true });
 
-  window.addEventListener('scroll', () => {
-    // Không dừng khi chính đoạn mã tự cuộn đang chạy
-    if (started && rafId === null && !userInteracting) {
-      startFrame();
+  // Nếu khách kéo thanh cuộn bằng chuột
+  window.addEventListener('mousedown', event => {
+    if (event.clientX >= window.innerWidth - 22) {
+      pauseThenResume();
     }
-  }, { passive: true });
+  });
 })();
+
 
   </script>
 </body>
