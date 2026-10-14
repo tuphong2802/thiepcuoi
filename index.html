@@ -252,6 +252,47 @@
     content: none !important;
     display: none !important;
     }
+  
+/* Nut bat/tat nhac noi */
+.music-toggle {
+  position: fixed;
+  left: 20px;
+  bottom: 24px;
+  z-index: 99999;
+
+  width: 58px;
+  height: 58px;
+  border: 0;
+  border-radius: 50%;
+
+  background: #9a718c;
+  color: #ffffff;
+  font-size: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.music-toggle:active {
+  transform: scale(0.94);
+}
+
+@media (max-width: 760px) {
+  .music-toggle {
+    left: 16px;
+    bottom: 20px;
+    width: 54px;
+    height: 54px;
+    font-size: 26px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -868,6 +909,45 @@ if (WEDDING.googleAppsScriptUrl) {
   });
 })();
 
+
+(() => {
+  const music = document.getElementById('weddingMusic');
+  const button = document.getElementById('musicToggle');
+
+  if (!music || !button) return;
+
+  function updateButton(isPlaying) {
+    button.textContent = isPlaying ? '♫' : '♪';
+    button.setAttribute(
+      'aria-label',
+      isPlaying ? 'Tắt nhạc' : 'Bật nhạc'
+    );
+    button.setAttribute('aria-pressed', String(isPlaying));
+    button.style.background = isPlaying ? '#263d34' : '#9a718c';
+  }
+
+  button.addEventListener('click', async () => {
+    if (music.paused) {
+      try {
+        await music.play();
+        updateButton(true);
+      } catch (error) {
+        updateButton(false);
+        console.error('Không thể phát nhạc:', error);
+        alert('Không phát được nhạc. Hãy kiểm tra file MP3 và thử lại.');
+      }
+    } else {
+      music.pause();
+      updateButton(false);
+    }
+  });
+
+  music.addEventListener('play', () => updateButton(true));
+  music.addEventListener('pause', () => updateButton(false));
+  music.addEventListener('ended', () => updateButton(false));
+
+  updateButton(!music.paused);
+})();
 
   </script>
 </body>
