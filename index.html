@@ -777,7 +777,7 @@
       const units = [Math.floor(distance / 86400000), Math.floor(distance / 3600000) % 24, Math.floor(distance / 60000) % 60, Math.floor(distance / 1000) % 60];
       const labels = ['Ngày', 'Giờ', 'Phút', 'Giây'];
       box.innerHTML = units.map((n, i) => `<div class="count-item"><strong>${String(n).padStart(2, '0')}</strong><span>${labels[i]}</span></div>`).join('');
-      message.textContent = 'Từng khoảnh khắc đưa chúng mình đến gần tiệc cưới trai ngày 29.11.2026.';
+      message.textContent = 'Từng khoảnh khắc đưa chúng ta đến gần tiệc cưới nhà trai ngày 29.11.2026.';
     }
     updateCountdown();
     if (WEDDING.weddingDateISO && Number.isFinite(new Date(WEDDING.weddingDateISO).getTime())) setInterval(updateCountdown, 1000);
