@@ -562,7 +562,7 @@
     document.querySelectorAll('[data-reception-time]').forEach(el => el.textContent = WEDDING.reception.time);
     document.querySelectorAll('[data-reception-venue]').forEach(el => el.textContent = WEDDING.reception.venue);
     document.querySelectorAll('[data-reception-address]').forEach(el => el.textContent = WEDDING.reception.address);
-    #get('initials').innerHTML = `${escapeHtml(WEDDING.groom.trim().charAt(0) || 'G')} <i>♡</i> ${escapeHtml(WEDDING.bride.trim().charAt(0) || 'C')}`;
+    // get('initials').innerHTML = `${escapeHtml(WEDDING.groom.trim().charAt(0) || 'G')} <i>♡</i> ${escapeHtml(WEDDING.bride.trim().charAt(0) || 'C')}`;
     get('coverDateTop').textContent = WEDDING.displayDate === '24.11.2026 · 29.11.2026' ? 'Save the date' : WEDDING.displayDate;
     get('footerNames').textContent = `${WEDDING.groom} & ${WEDDING.bride}`;
     applyMap('ceremonyMap', WEDDING.ceremony.mapUrl);
